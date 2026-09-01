@@ -15,9 +15,9 @@
     "rootDir": ".",
     "composite": true,
     "paths": {
-      "@skill-map/contracts": ["../shared/contracts/src"],
-      "@skill-map/config": ["../shared/config/src"],
-      "@skill-map/utils": ["../shared/utils/src"]
+      "@skill-map/contracts": ["../shared/contracts/dist"],
+      "@skill-map/config": ["../shared/config/dist"],
+      "@skill-map/utils": ["../shared/utils/dist"]
     }
   },
   "include": ["src/**/*", "vitest.config.ts"],
