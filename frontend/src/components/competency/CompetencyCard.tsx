@@ -40,7 +40,7 @@ export default function CompetencyCard({ competency, proficiencyLevel = 0, onCli
 
         {competency.keywords.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {competency.keywords.slice(0, 3).map((kw) => (
+            {competency.keywords.slice(0, 3).map((kw: string) => (
               <Badge key={kw} variant="default" size="sm">{kw}</Badge>
             ))}
             {competency.keywords.length > 3 && (
