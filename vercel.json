@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npm ci --prefix shared/contracts && npm ci --prefix shared/config && npm run build --prefix frontend",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "frontend/dist",
-  "installCommand": "npm ci --prefix frontend",
+  "installCommand": "npm ci --prefix shared/contracts && npm ci --prefix shared/config && npm ci --prefix frontend",
   "framework": "vite",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
