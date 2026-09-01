@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx tsc --build --project tsconfig.json",
+    "build": "npx tsc --build tsconfig.json",
     "start": "npm run build && node dist/index.js",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
