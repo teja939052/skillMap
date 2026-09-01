@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: skillmap-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: skillmap2026
+      MONGO_INITDB_DATABASE: skillmap
+
+  redis:
+    image: redis:7-alpine
+    container_name: skillmap-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: skillmap-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:skillmap2026@mongodb:27017/skillmap?authSource=admin
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: your-access-secret-change-in-production
+      JWT_REFRESH_SECRET: your-refresh-secret-change-in-production
+      PORT: 4000
+    depends_on:
+      - mongodb
+      - redis
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: skillmap-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: skillmap-worker
+    restart: unless-stopped
+    command: node dist/worker/index.js
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:skillmap2026@mongodb:27017/skillmap?authSource=admin
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+
+volumes:
+  mongo_data:
+  redis_data:
