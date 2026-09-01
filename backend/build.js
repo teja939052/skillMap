@@ -1,10 +1,17 @@
 #!/usr/bin/env node
-const { spawn } = require('child_process');
+const { execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
 
 const tscBin = path.resolve(__dirname, 'node_modules', '.bin', os.platform() === 'win32' ? 'tsc.cmd' : 'tsc');
-const args = ['--project', path.resolve(__dirname, 'tsconfig.json')];
+const tsconfig = path.resolve(__dirname, 'tsconfig.json');
 
-const child = spawn(tscBin, args, { stdio: 'inherit', shell: true });
-child.on('exit', (code) => process.exit(code));
+try {
+  execSync(`"${tscBin}" --build "${tsconfig}"`, {
+    cwd: __dirname,
+    stdio: 'inherit',
+    shell: true,
+  });
+} catch (e) {
+  process.exit(1);
+}
