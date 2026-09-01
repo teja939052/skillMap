@@ -1,7 +1,5 @@
-import { randomUUID } from 'node:crypto';
-
 export function generateId(): string {
-  return randomUUID();
+  return (globalThis as any).crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 export function slugify(text: string): string {
