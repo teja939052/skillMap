@@ -8,9 +8,10 @@ function requireEnv(name: string, fallback: string): string {
 }
 
 function resolvePort(): number {
-  // Honor the PORT env var exactly so the app binds the same port Render
-  // probes/routes (Render sets PORT, or a dashboard PORT=4000). Fall back to
-  // 4000 only when PORT is absent.
+  // Render's service Port setting is 4000 (Render scans "port 4000 from PORT
+  // environment variable"). Force 4000 in production so the app binds exactly
+  // the port Render probes. In development, honor PORT or default to 4000.
+  if (process.env.NODE_ENV === 'production') return 4000;
   if (process.env.PORT) {
     const p = parseInt(process.env.PORT, 10);
     if (!Number.isNaN(p) && p > 0) return p;
