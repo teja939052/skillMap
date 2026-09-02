@@ -12,7 +12,7 @@
     "build:backend": "npm ci --prefix shared/config && npm ci --prefix shared/contracts && npm ci --prefix shared/utils && npm ci --prefix backend && npm run build --prefix shared/config && npm run build --prefix shared/contracts && npm run build --prefix shared/utils && npm run build --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
     "build:render": "npm ci --prefix shared/config && npm ci --prefix shared/contracts && npm ci --prefix shared/utils && npm ci --prefix backend --include=dev && npm run build --prefix shared/config && npm run build --prefix shared/contracts && npm run build --prefix shared/utils && node backend/build.js",
-    "build:vercel": "npm ci --prefix shared/contracts && npm ci --prefix shared/config && npm run build --prefix frontend"
+    "build:vercel": "npm install --prefix shared/contracts && npm install --prefix shared/config && npm run build --prefix shared/contracts && npm run build --prefix shared/config && npm run build --prefix frontend"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
