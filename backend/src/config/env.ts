@@ -7,9 +7,21 @@ function requireEnv(name: string, fallback: string): string {
   return value;
 }
 
+function resolvePort(): number {
+  // Render exposes every Web Service on port 10000 and health-check probes $PORT.
+  // Force 10000 in production so a stale dashboard PORT=4000 can't break the
+  // health check. In development, honor PORT or default to 4000.
+  if (process.env.NODE_ENV === 'production') return 10000;
+  if (process.env.PORT) {
+    const p = parseInt(process.env.PORT, 10);
+    if (!Number.isNaN(p) && p > 0) return p;
+  }
+  return 4000;
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '4000', 10),
+  port: resolvePort(),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   mongodb: {
     uri: process.env.MONGO_URL || 'mongodb://localhost:27017',
