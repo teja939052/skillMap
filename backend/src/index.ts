@@ -307,10 +307,10 @@ async function main() {
     studentRecordRepo,
   } as any);
 
-  app.listen(env.port, () => {
+  app.listen(env.port, '0.0.0.0', () => {
     console.log(`[Skill Map API] Running on port ${env.port}`);
     console.log(`[Skill Map API] Environment: ${env.nodeEnv}`);
-    console.log(`[API] http://localhost:${env.port}/api/v1/health`);
+    console.log(`[API] http://0.0.0.0:${env.port}/api/v1/health`);
   });
 }
 
