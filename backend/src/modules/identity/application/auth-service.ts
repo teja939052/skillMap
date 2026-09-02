@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { randomBytes, createHash } from 'node:crypto';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 import { env } from '../../../config/env.js';
 import { Result, ok, err } from '../../../shared/domain/result.js';
 import { EntityId } from '../../../shared/domain/entity.js';
@@ -156,12 +156,12 @@ export class AuthService {
   }
 
   private async hashPassword(password: string): Promise<string> {
-    return argon2.hash(password);
+    return bcrypt.hash(password, 12);
   }
 
   private async verifyPassword(hash: string, password: string): Promise<boolean> {
     try {
-      return await argon2.verify(hash, password);
+      return await bcrypt.compare(password, hash);
     } catch {
       return false;
     }

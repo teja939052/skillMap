@@ -12,33 +12,36 @@
     "seed": "tsx src/scripts/demo-seed.ts"
   },
   "dependencies": {
-    "@skill-map/contracts": "file:../shared/contracts",
     "@skill-map/config": "file:../shared/config",
+    "@skill-map/contracts": "file:../shared/contracts",
     "@skill-map/utils": "file:../shared/utils",
-    "express": "^4.21.1",
-    "mongodb": "^6.11.0",
-    "jsonwebtoken": "^9.0.2",
     "argon2": "^0.41.1",
-    "zod": "^3.23.8",
-    "cors": "^2.8.5",
-    "helmet": "^8.0.0",
-    "morgan": "^1.10.0",
+    "argon2": "^0.41.1",
+    "bcryptjs": "^3.0.3",
     "bullmq": "^5.34.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
     "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.11.0",
+    "morgan": "^1.10.0",
     "uuid": "^11.0.3",
-    "dotenv": "^16.4.7"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "tsx": "^4.19.2",
-    "vitest": "^2.1.8",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.7",
-    "@types/cors": "^2.8.17",
     "@types/morgan": "^1.9.9",
-    "@types/uuid": "^10.0.0",
     "@types/node": "^22.10.1",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9.15.0",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
