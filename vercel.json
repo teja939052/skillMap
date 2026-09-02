@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix shared/contracts && npm install --prefix shared/config && npm install --prefix frontend",
-  "buildCommand": "npm run build --prefix shared/contracts && npm run build --prefix shared/config && npm run build --prefix frontend",
+  "installCommand": "cd /vercel/path0 && npm install --prefix shared/contracts && npm install --prefix shared/config && npm install --prefix frontend",
+  "buildCommand": "cd /vercel/path0 && npm run build --prefix shared/contracts && npm run build --prefix shared/config && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist"
 }
