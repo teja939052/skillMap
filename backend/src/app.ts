@@ -24,6 +24,10 @@ export function createApp(deps: AppDependencies) {
   app.use(cors({ origin: env.frontendUrl, credentials: true }));
   app.use(express.json({ limit: '10mb' }));
 
+  app.get('/', (_req, res) => {
+    res.json({ status: true, service: 'skill-map-api', ts: new Date().toISOString() });
+  });
+
   app.use('/api/v1/health', (_req, res) => {
     res.json({ status: true, timestamp: new Date().toISOString() });
   });
