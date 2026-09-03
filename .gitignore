@@ -7,6 +7,7 @@ dist
 build
 .next
 .vite
+*.tsbuildinfo
 
 # Env files
 .env

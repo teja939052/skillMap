@@ -24,6 +24,10 @@ import { InstitutionRepository, DepartmentRepository, ProgramRepository, Curricu
 import { StudentRecordRepository } from './modules/institution/infrastructure/student-record.repository.js';
 import { StudentImportService } from './modules/institution/application/student-import.service.js';
 import { OpportunityService } from './services/opportunity.service.js';
+import { FreelanceTaskRepository } from './modules/freelance/infrastructure/repositories.js';
+import { FreelanceService } from './modules/freelance/application/freelance-service.js';
+import { NotificationRepository } from './modules/notifications/infrastructure/repositories.js';
+import { NotificationService } from './modules/notifications/application/notification-service.js';
 
 async function main() {
   await connectDatabase();
@@ -55,6 +59,10 @@ async function main() {
   const cohortRepo = new CohortRepository();
   const studentRecordRepo = new StudentRecordRepository();
   const studentImportService = new StudentImportService(studentRecordRepo);
+  const freelanceRepo = new FreelanceTaskRepository();
+  const freelanceService = new FreelanceService(freelanceRepo);
+  const notificationRepo = new NotificationRepository();
+  const notificationService = new NotificationService(notificationRepo);
 
   const authService = new AuthService(userRepo, sessionRepo);
   const evidenceService = new EvidenceService(evidenceRepo);
@@ -305,6 +313,8 @@ async function main() {
     assessmentService,
     studentImportService,
     studentRecordRepo,
+    freelanceService,
+    notificationService,
   } as any);
 
   app.listen(env.port, '0.0.0.0', () => {

@@ -15,6 +15,8 @@ import { createFacultyRouter } from './modules/faculty/http/faculty-controller.j
 import { createRoleBlueprintRouter } from './modules/role-blueprint/http/role-blueprint-controller.js';
 import { createAssessmentRouter } from './modules/assessment/http/assessment-controller.js';
 import { createDemoRouter } from './modules/demo/demo.router.js';
+import { createFreelanceRouter } from './modules/freelance/http/freelance-controller.js';
+import { createNotificationRouter } from './modules/notifications/http/notification-controller.js';
 import { AuthService } from './modules/identity/application/auth-service.js';
 
 export function createApp(deps: AppDependencies) {
@@ -44,6 +46,8 @@ export function createApp(deps: AppDependencies) {
   app.use('/api/v1/role-blueprints', createRoleBlueprintRouter(deps.roleBlueprintService));
   app.use('/api/v1/assessments', createAssessmentRouter(deps.assessmentService));
   app.use('/api/v1/demo', createDemoRouter());
+  app.use('/api/v1/freelance', createFreelanceRouter(deps.freelanceService));
+  app.use('/api/v1/notifications', createNotificationRouter(deps.notificationService));
 
   app.use(handleError);
 
@@ -62,4 +66,6 @@ export interface AppDependencies {
   facultyService: any;
   roleBlueprintService: any;
   assessmentService: any;
+  freelanceService: any;
+  notificationService: any;
 }

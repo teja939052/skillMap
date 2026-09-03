@@ -17,6 +17,7 @@ import StudentOpportunities from '../pages/student/Opportunities';
 import Applications from '../pages/student/Applications';
 import StudentProjects from '../pages/student/Projects';
 import StudentMentorship from '../pages/student/Mentorship';
+import Earn from '../pages/student/Earn';
 
 // Institution pages
 import InstitutionDashboard from '../pages/institution/InstitutionDashboard';
@@ -49,6 +50,7 @@ import Taxonomy from '../pages/admin/Taxonomy';
 import Users from '../pages/admin/Users';
 import AuditLogs from '../pages/admin/AuditLogs';
 import Demo from '../pages/Demo';
+import Notifications from '../pages/Notifications';
 
 export const routes: RouteObject[] = [
   {
@@ -70,6 +72,8 @@ export const routes: RouteObject[] = [
       { path: 'gap-map', element: <GapMapPage /> },
       { path: 'growth-plan', element: <GrowthPlan /> },
       { path: 'opportunities', element: <StudentOpportunities /> },
+      { path: 'earn', element: <Earn /> },
+      { path: 'notifications', element: <Notifications /> },
       { path: 'applications', element: <Applications /> },
       { path: 'projects', element: <StudentProjects /> },
       { path: 'mentorship', element: <StudentMentorship /> },

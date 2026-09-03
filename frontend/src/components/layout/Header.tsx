@@ -1,8 +1,9 @@
-import { Bell, Search, Settings } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/ui';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 interface HeaderProps {
   title?: string;
@@ -34,10 +35,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
           />
         </div>
 
-        <button className="relative p-2 text-gray-500 hover:text-navy-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
-        </button>
+        <NotificationBell />
 
         <button className="p-2 text-gray-500 hover:text-navy-700 hover:bg-gray-100 rounded-lg transition-colors">
           <Settings className="h-5 w-5" />
