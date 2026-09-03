@@ -17,6 +17,8 @@ import { createAssessmentRouter } from './modules/assessment/http/assessment-con
 import { createDemoRouter } from './modules/demo/demo.router.js';
 import { createFreelanceRouter } from './modules/freelance/http/freelance-controller.js';
 import { createNotificationRouter } from './modules/notifications/http/notification-controller.js';
+import { createSkillGraphRouter } from './modules/skillgraph/http/skill-graph-controller.js';
+import { createMissionRouter } from './modules/missions/http/mission-controller.js';
 import { AuthService } from './modules/identity/application/auth-service.js';
 
 export function createApp(deps: AppDependencies) {
@@ -48,6 +50,8 @@ export function createApp(deps: AppDependencies) {
   app.use('/api/v1/demo', createDemoRouter());
   app.use('/api/v1/freelance', createFreelanceRouter(deps.freelanceService));
   app.use('/api/v1/notifications', createNotificationRouter(deps.notificationService));
+  app.use('/api/v1/skill-graph', createSkillGraphRouter(deps.skillGraphService));
+  app.use('/api/v1/missions', createMissionRouter(deps.missionService));
 
   app.use(handleError);
 
@@ -68,4 +72,6 @@ export interface AppDependencies {
   assessmentService: any;
   freelanceService: any;
   notificationService: any;
+  skillGraphService: any;
+  missionService: any;
 }

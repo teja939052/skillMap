@@ -93,4 +93,19 @@ export const analyticsApi = {
     const response = await apiClient.get('/analytics/demand', { params });
     return response.data;
   },
+
+  async getDemandRadar(region?: string) {
+    const params: Record<string, string> = {};
+    if (region) params.region = region;
+    const response = await apiClient.get('/analytics/demand-radar', { params });
+    return response.data;
+  },
+
+  async getGapObservatory(institutionId?: string, region?: string) {
+    const params: Record<string, string> = {};
+    if (institutionId) params.institutionId = institutionId;
+    if (region) params.region = region;
+    const response = await apiClient.get('/analytics/gap-observatory', { params });
+    return response.data;
+  },
 };

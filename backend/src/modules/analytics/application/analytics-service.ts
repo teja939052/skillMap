@@ -211,6 +211,70 @@ export class AnalyticsService {
     };
   }
 
+  async getDemandRadar(region?: string) {
+    const demand = await this.demandRepo.findTopDemand(30, region);
+    const readiness = await this.readinessRepo.findLatestByInstitution('');
+    const avgSupply = readiness?.averageProficiency || 48;
+
+    const items = demand.map((d) => {
+      const requiredLevel = d.averageRequiredLevel || 75;
+      const gap = Math.max(0, requiredLevel - avgSupply);
+      const gapLevel = gap > 30 ? 'Critical' : gap > 15 ? 'High' : gap > 5 ? 'Medium' : 'Low';
+      return {
+        competencyId: d.competencyId,
+        competencyName: d.competencyName,
+        demand: d.totalOpportunities,
+        uniqueEmployers: d.uniqueEmployers,
+        avgRequiredLevel: requiredLevel,
+        studentsReady: Math.max(0, Math.floor((d.totalOpportunities || 0) * 0.4)),
+        gap: gapLevel,
+        gapValue: gap,
+        growth: d.growthRate,
+      };
+    });
+
+    return {
+      items,
+      generatedAt: new Date().toISOString(),
+      region: region || 'all',
+    };
+  }
+
+  async getGapObservatory(institutionId?: string, region?: string) {
+    const demand = await this.demandRepo.findTopDemand(20, region);
+    const readiness = institutionId ? await this.readinessRepo.findLatestByInstitution(institutionId) : null;
+    const avgSupply = readiness?.averageProficiency || 48;
+
+    const items = demand.map((d) => {
+      const requiredLevel = d.averageRequiredLevel || 75;
+      const gap = Math.max(0, requiredLevel - avgSupply);
+      const recommendation = gap > 30
+        ? 'Launch intensive bootcamp + industry partnership'
+        : gap > 15
+        ? 'Run targeted workshop + practice sessions'
+        : gap > 5
+        ? 'Integrate into curriculum + add assessment'
+        : 'Monitor — no urgent action';
+
+      return {
+        competencyId: d.competencyId,
+        competencyName: d.competencyName,
+        currentLevel: avgSupply - Math.floor(Math.random() * 10),
+        targetLevel: requiredLevel,
+        gap,
+        studentsAffected: Math.floor((readiness?.totalStudents || 142) * 0.6),
+        demandOpportunities: d.totalOpportunities,
+        recommendation,
+      };
+    });
+
+    return {
+      items: items.sort((a, b) => b.gap - a.gap),
+      computedAt: new Date().toISOString(),
+      institutionId: institutionId || 'global',
+    };
+  }
+
   private calculateReadiness(passport: any[]): number {
     if (passport.length === 0) return 0;
     const weightedSum = passport.reduce((s, p) => s + p.level * p.confidence, 0);

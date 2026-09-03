@@ -28,6 +28,10 @@ import { FreelanceTaskRepository } from './modules/freelance/infrastructure/repo
 import { FreelanceService } from './modules/freelance/application/freelance-service.js';
 import { NotificationRepository } from './modules/notifications/infrastructure/repositories.js';
 import { NotificationService } from './modules/notifications/application/notification-service.js';
+import { SkillGraphRepository } from './modules/skillgraph/infrastructure/repositories.js';
+import { SkillGraphService } from './modules/skillgraph/application/skill-graph-service.js';
+import { SkillMissionRepository } from './modules/missions/infrastructure/repositories.js';
+import { SkillMissionService } from './modules/missions/application/mission-service.js';
 
 async function main() {
   await connectDatabase();
@@ -63,6 +67,10 @@ async function main() {
   const freelanceService = new FreelanceService(freelanceRepo);
   const notificationRepo = new NotificationRepository();
   const notificationService = new NotificationService(notificationRepo);
+  const skillGraphRepo = new SkillGraphRepository();
+  const skillGraphService = new SkillGraphService(skillGraphRepo);
+  const missionRepo = new SkillMissionRepository();
+  const missionService = new SkillMissionService(missionRepo);
 
   const authService = new AuthService(userRepo, sessionRepo);
   const evidenceService = new EvidenceService(evidenceRepo);
@@ -96,6 +104,10 @@ async function main() {
         const result = matchingEngine.calculateMatch({ studentId: userId, studentCompetencies: sc, requirements: opp.requirements as any, eligibility: { passed: true } });
         return { opportunityId: opp.id.toString(), title: opp.title, type: opp.type, score: result.score, strengths: result.strengths, gaps: result.gaps, explanation: result.explanation };
       }).sort((a, b) => b.score - a.score);
+      const topMatch = items.find((i) => i.score >= 75);
+      if (topMatch) {
+        try { await notificationService.pushOpportunityMatch(userId, topMatch.opportunityId, topMatch.title, topMatch.score); } catch {}
+      }
       return { items, total: items.length };
     },
     matchCandidates: async (opportunityId: string, _query: any = {}) => {
@@ -149,6 +161,8 @@ async function main() {
     getSkillGaps: (institutionId: string, requirements?: any) => analyticsService.getSkillGaps(institutionId, requirements),
     getInterventionOutcomes: (id: string) => analyticsService.getInterventionOutcomes(id),
     getDemandSignals: (region?: string) => analyticsService.getDemandSignals(region),
+    getDemandRadar: (region?: string) => analyticsService.getDemandRadar(region),
+    getGapObservatory: (institutionId?: string, region?: string) => analyticsService.getGapObservatory(institutionId, region),
   };
 
   const roleBlueprintServiceProxy = {
@@ -315,6 +329,8 @@ async function main() {
     studentRecordRepo,
     freelanceService,
     notificationService,
+    skillGraphService,
+    missionService,
   } as any);
 
   app.listen(env.port, '0.0.0.0', () => {

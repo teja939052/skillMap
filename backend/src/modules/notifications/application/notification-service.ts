@@ -41,6 +41,15 @@ export class NotificationService {
     return n;
   }
 
+  async pushOpportunityMatch(userId: string, opportunityId: string, opportunityTitle: string, matchScore: number) {
+    return this.pushForUser(userId, {
+      title: 'New Opportunity Match',
+      body: `${opportunityTitle} — ${matchScore}% match`,
+      type: 'opportunity_match',
+      link: `/opportunities`,
+    });
+  }
+
   async pushMany(userIds: string[], input: { title: string; body: string; type: string; link?: string }) {
     for (const userId of userIds) {
       await this.pushForUser(userId, input);

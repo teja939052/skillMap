@@ -18,6 +18,9 @@ import Applications from '../pages/student/Applications';
 import StudentProjects from '../pages/student/Projects';
 import StudentMentorship from '../pages/student/Mentorship';
 import Earn from '../pages/student/Earn';
+import EvidenceWallet from '../pages/student/EvidenceWallet';
+import SkillMissions from '../pages/student/SkillMissions';
+import SkillsTwin from '../pages/student/SkillsTwin';
 
 // Institution pages
 import InstitutionDashboard from '../pages/institution/InstitutionDashboard';
@@ -74,6 +77,9 @@ export const routes: RouteObject[] = [
       { path: 'opportunities', element: <StudentOpportunities /> },
       { path: 'earn', element: <Earn /> },
       { path: 'notifications', element: <Notifications /> },
+      { path: 'evidence-wallet', element: <EvidenceWallet /> },
+      { path: 'skill-missions', element: <SkillMissions /> },
+      { path: 'skills-twin', element: <SkillsTwin /> },
       { path: 'applications', element: <Applications /> },
       { path: 'projects', element: <StudentProjects /> },
       { path: 'mentorship', element: <StudentMentorship /> },

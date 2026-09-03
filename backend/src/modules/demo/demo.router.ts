@@ -59,7 +59,7 @@ export function createDemoRouter(): Router {
     const institutionId = 'demo-gpcet';
     // Isolated delete — only org-demo / demo-gpcet, never prod
     const { getCollection } = await import('../../shared/persistence/database.js');
-    const cols = ['institutions', 'departments', 'programs', 'cohorts', 'student_records', 'student_competencies', 'competencies', 'role_blueprints', 'opportunities', 'assessment_attempts', 'freelance_tasks', 'notifications'] as const;
+    const cols = ['institutions', 'departments', 'programs', 'cohorts', 'student_records', 'student_competencies', 'competencies', 'role_blueprints', 'opportunities', 'assessment_attempts', 'freelance_tasks', 'notifications', 'skill_graph_nodes', 'skill_missions'] as const;
     for (const c of cols) {
       try { await getCollection(c).deleteMany({ $or: [{ orgId }, { institutionId }, { _id: institutionId as any }] } as any); } catch {}
     }

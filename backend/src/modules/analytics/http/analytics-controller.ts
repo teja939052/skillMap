@@ -35,5 +35,15 @@ export function createAnalyticsRouter(service: any): Router {
     sendSuccess(res, result);
   }));
 
+  router.get('/demand-radar', authenticate, asyncHandler(async (req, res) => {
+    const result = await service.getDemandRadar(req.query.region);
+    sendSuccess(res, result);
+  }));
+
+  router.get('/gap-observatory', authenticate, asyncHandler(async (req, res) => {
+    const result = await service.getGapObservatory(req.query.institutionId, req.query.region);
+    sendSuccess(res, result);
+  }));
+
   return router;
 }

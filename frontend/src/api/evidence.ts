@@ -1,6 +1,26 @@
 import { apiClient } from './client';
 import type { ApiResponse, EvidenceResponse, PaginatedResponse, Pagination } from '@/types';
 
+export interface TrustScoreItem {
+  id: string;
+  type: string;
+  title: string;
+  proficiencyLevel: number;
+  confidence: number;
+  trustScore: number;
+  verificationStatus: string;
+  issuedAt?: string;
+  verifierId?: string;
+}
+
+export interface TrustScoreByCompetency {
+  competencyId: string;
+  confidence: number;
+  evidenceCount: number;
+  topSource: string;
+  items: TrustScoreItem[];
+}
+
 export const evidenceApi = {
   async getEvidence(params?: Pagination & { competencyId?: string; type?: string; status?: string }) {
     const response = await apiClient.get<ApiResponse<PaginatedResponse<EvidenceResponse>>>('/evidence', { params });
@@ -29,6 +49,11 @@ export const evidenceApi = {
 
   async verifyEvidence(id: string, data: { status: 'verified' | 'rejected'; notes?: string }) {
     const response = await apiClient.patch<ApiResponse<EvidenceResponse>>(`/evidence/${id}/verify`, data);
+    return response.data;
+  },
+
+  async getTrustScores() {
+    const response = await apiClient.get<ApiResponse<TrustScoreByCompetency[]>>('/evidence/trust/me');
     return response.data;
   },
 };

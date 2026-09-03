@@ -25,5 +25,10 @@ export function createEvidenceRouter(service: any): Router {
     sendSuccess(res, result);
   }));
 
+  router.get('/trust/me', authenticate, asyncHandler(async (req, res) => {
+    const result = await service.getTrustScores(req.user!.userId);
+    sendSuccess(res, result);
+  }));
+
   return router;
 }

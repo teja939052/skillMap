@@ -60,11 +60,37 @@ export const EVIDENCE_TYPES = [
   'self_declaration',
   'internship_outcome',
   'mentor_attestation',
+  'github',
+  'research',
+  'workshop',
+  'industry_project',
+  'faculty_mentoring',
+  'hackathon',
+  'peer_endorsement',
 ] as const;
 
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
 
 export const evidenceTypeSchema = z.enum(EVIDENCE_TYPES);
+
+export const EVIDENCE_TYPE_TRUST: Record<EvidenceType, number> = {
+  assessment: 80,
+  project: 85,
+  certification: 72,
+  faculty_verification: 90,
+  industry_verification: 95,
+  experience: 60,
+  self_declaration: 20,
+  internship_outcome: 88,
+  mentor_attestation: 96,
+  github: 88,
+  research: 92,
+  workshop: 65,
+  industry_project: 95,
+  faculty_mentoring: 96,
+  hackathon: 82,
+  peer_endorsement: 55,
+};
 
 export const VERIFICATION_STATUS = [
   'pending',

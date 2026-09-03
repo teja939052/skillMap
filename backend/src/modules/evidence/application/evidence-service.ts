@@ -4,6 +4,7 @@ import { Result, ok, err, ValidationError, NotFoundError, ConflictError } from '
 import { Evidence } from '../domain/evidence.js';
 import { EvidenceRepository } from '../infrastructure/repositories.js';
 import { getCollection } from '../../../config/database.js';
+import { EVIDENCE_TYPE_TRUST, EvidenceType } from '../../../shared/domain/value-objects.js';
 
 export interface CreateEvidenceData {
   ownerId: string;
@@ -166,5 +167,74 @@ export class EvidenceService {
     }
 
     return ok(stats);
+  }
+
+  async getTrustScores(ownerId: string): Promise<Result<Array<{
+    competencyId: string;
+    confidence: number;
+    evidenceCount: number;
+    topSource: string;
+    items: Array<{
+      id: string;
+      type: EvidenceType;
+      title: string;
+      proficiencyLevel: number;
+      confidence: number;
+      trustScore: number;
+      verificationStatus: string;
+      issuedAt?: string;
+      verifierId?: string;
+    }>;
+  }>>> {
+    const evidences = await this.evidenceRepo.findByOwner(ownerId);
+    const byCompetency = new Map<string, Evidence[]>();
+    for (const e of evidences) {
+      const list = byCompetency.get(e.competencyId) || [];
+      list.push(e);
+      byCompetency.set(e.competencyId, list);
+    }
+
+    const result = Array.from(byCompetency.entries()).map(([competencyId, items]) => {
+      let weightedConfSum = 0;
+      let weightTotal = 0;
+      let topSource = '';
+      let topSourceWeight = 0;
+
+      const mapped = items.map((e) => {
+        const trustWeight = EVIDENCE_TYPE_TRUST[e.type] || 50;
+        const verifiedBoost = e.verificationStatus === 'verified' ? 1.2 : e.verificationStatus === 'pending' ? 0.8 : 0.3;
+        const recencyDays = e.issuedAt ? Math.floor((Date.now() - new Date(e.issuedAt).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+        const recencyFactor = Math.max(0, 1 - recencyDays / 180);
+        const score = trustWeight * verifiedBoost * recencyFactor;
+        if (score > topSourceWeight) {
+          topSourceWeight = score;
+          topSource = e.type;
+        }
+        weightedConfSum += score * e.confidence;
+        weightTotal += score;
+        return {
+          id: e.id.toString(),
+          type: e.type,
+          title: e.title,
+          proficiencyLevel: e.proficiencyLevel,
+          confidence: e.confidence,
+          trustScore: Math.round(score * 100) / 100,
+          verificationStatus: e.verificationStatus,
+          issuedAt: e.issuedAt ? new Date(e.issuedAt).toISOString() : undefined,
+          verifierId: e.verifiedBy || undefined,
+        };
+      });
+
+      const confidence = weightTotal > 0 ? Math.round((weightedConfSum / weightTotal) * 100) / 100 : 0;
+      return {
+        competencyId,
+        confidence,
+        evidenceCount: items.length,
+        topSource,
+        items: mapped.sort((a, b) => b.trustScore - a.trustScore),
+      };
+    });
+
+    return ok(result.sort((a, b) => b.confidence - a.confidence));
   }
 }

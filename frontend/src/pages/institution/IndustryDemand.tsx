@@ -1,36 +1,82 @@
-import { Card } from '@/components/ui';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, Badge } from '@/components/ui';
+import { TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { analyticsApi } from '@/api/analytics';
+
+interface DemandRadarItem {
+  competencyId: string;
+  competencyName: string;
+  demand: number;
+  uniqueEmployers: number;
+  avgRequiredLevel: number;
+  studentsReady: number;
+  gap: string;
+  growth: number;
+}
 
 export default function IndustryDemand() {
-  const demand = [
-    { skill: 'Python', demand: 92, growth: 12, trend: 'up' },
-    { skill: 'React', demand: 88, growth: 18, trend: 'up' },
-    { skill: 'AWS', demand: 85, growth: 22, trend: 'up' },
-    { skill: 'Docker', demand: 78, growth: 25, trend: 'up' },
-    { skill: 'Machine Learning', demand: 75, growth: 30, trend: 'up' },
-    { skill: 'Kubernetes', demand: 70, growth: 28, trend: 'up' },
-  ];
+  const { data, isLoading } = useQuery({
+    queryKey: ['demand-radar'],
+    queryFn: async () => {
+      const res = await analyticsApi.getDemandRadar();
+      return res.data as { items: DemandRadarItem[] };
+    },
+  });
+
+  const items = data?.items || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-navy-900">Industry Demand Map</h1>
-        <p className="text-gray-500 mt-1">Skills currently in demand</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-navy-900">Industry Demand Radar</h1>
+          <p className="text-gray-500 mt-1">Skill demand index computed from live opportunities + role blueprints</p>
+        </div>
+        <Badge className="bg-blue-50 text-blue-700 border-blue-200">{items.length} skills tracked</Badge>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {demand.map((item) => (
-          <Card key={item.skill} className="p-5">
+        {items.map((item) => (
+          <Card key={item.competencyId} className="p-5">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-navy-900">{item.skill}</h3>
-              {item.trend === 'up' ? <TrendingUp className="w-4 h-4 text-green-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
+              <h3 className="font-semibold text-navy-900">{item.competencyName}</h3>
+              {item.growth > 0 ? <TrendingUp className="w-4 h-4 text-green-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-gray-200 rounded-full h-3">
-                <div className="bg-accent h-3 rounded-full" style={{ width: `${item.demand}%` }} />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Demand</span>
+                <span className="font-medium">{item.demand} opportunities</span>
               </div>
-              <span className="text-sm font-medium text-gray-700">{item.demand}%</span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Employers</span>
+                <span className="font-medium">{item.uniqueEmployers}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Students Ready</span>
+                <span className="font-medium">{item.studentsReady}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Avg Required Level</span>
+                <span className="font-medium">{item.avgRequiredLevel}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gap</span>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                  item.gap === 'Critical' ? 'bg-red-100 text-red-700' :
+                  item.gap === 'High' ? 'bg-amber-100 text-amber-700' :
+                  item.gap === 'Medium' ? 'bg-blue-100 text-blue-700' :
+                  'bg-green-100 text-green-700'
+                }`}>{item.gap}</span>
+              </div>
             </div>
-            <p className="text-xs text-green-600 mt-2">+{item.growth}% growth</p>
           </Card>
         ))}
       </div>
