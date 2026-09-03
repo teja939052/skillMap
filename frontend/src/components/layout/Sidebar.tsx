@@ -34,6 +34,7 @@ function getNavItems(role: string): NavItem[] {
       { label: 'Gap Map', path: '/student/gap-map', icon: 'Target' },
       { label: 'Growth Plan', path: '/student/growth-plan', icon: 'TrendingUp' },
       { label: 'Opportunities', path: '/student/opportunities', icon: 'Briefcase' },
+      { label: 'Earn', path: '/student/earn', icon: 'Wrench' },
       { label: 'Applications', path: '/student/applications', icon: 'Send' },
       { label: 'Projects', path: '/student/projects', icon: 'FolderKanban' },
       { label: 'Mentorship', path: '/student/mentorship', icon: 'Users' },
