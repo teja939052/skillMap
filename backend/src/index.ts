@@ -32,6 +32,14 @@ import { SkillGraphRepository } from './modules/skillgraph/infrastructure/reposi
 import { SkillGraphService } from './modules/skillgraph/application/skill-graph-service.js';
 import { SkillMissionRepository } from './modules/missions/infrastructure/repositories.js';
 import { SkillMissionService } from './modules/missions/application/mission-service.js';
+import { ChallengeRepository, ChallengeSubmissionRepository } from './modules/challenges/infrastructure/repositories.js';
+import { ChallengeService } from './modules/challenges/application/challenge-service.js';
+import { MicroInternshipRepository, MicroInternshipApplicationRepository } from './modules/micro-internships/infrastructure/repositories.js';
+import { MicroInternshipService } from './modules/micro-internships/application/micro-internship-service.js';
+import { SkillRequestRepository } from './modules/skill-requests/infrastructure/repositories.js';
+import { SkillRequestService } from './modules/skill-requests/application/skill-request-service.js';
+import { SkillTwinService } from './modules/skill-twin/application/skill-twin-service.js';
+import { Evidence } from './modules/evidence/domain/evidence.js';
 
 async function main() {
   await connectDatabase();
@@ -71,6 +79,68 @@ async function main() {
   const skillGraphService = new SkillGraphService(skillGraphRepo);
   const missionRepo = new SkillMissionRepository();
   const missionService = new SkillMissionService(missionRepo);
+  const challengeRepo = new ChallengeRepository();
+  const challengeSubmissionRepo = new ChallengeSubmissionRepository();
+  const challengeService = new ChallengeService(challengeRepo, challengeSubmissionRepo);
+  const microInternshipRepo = new MicroInternshipRepository();
+  const microInternshipAppRepo = new MicroInternshipApplicationRepository();
+  const microInternshipService = new MicroInternshipService(microInternshipRepo, microInternshipAppRepo);
+  const skillRequestRepo = new SkillRequestRepository();
+  const skillRequestService = new SkillRequestService(skillRequestRepo, {
+    async countMatchingStudents(institutionId: string, requirement: { competencyId: string; minLevel: number }) {
+      const docs = await (studentCompetencyRepo as any).collection.find({ institutionId, competencyId: requirement.competencyId, proficiency: { $gte: requirement.minLevel } }).count();
+      return docs ?? 0;
+    },
+  });
+  const skillTwinService = new SkillTwinService({
+    async getEvidence(studentId: string) {
+      const items = await evidenceRepo.findByOwner(studentId);
+      return items.map((e: any) => ({
+        id: e.id.toString(), competencyId: e.competencyId, type: e.type, title: e.title,
+        proficiencyLevel: e.proficiencyLevel, confidence: e.confidence,
+        verificationStatus: e.verificationStatus, verifiedAt: e.verifiedAt, createdAt: e.createdAt, metadata: e.metadata || {},
+      }));
+    },
+    async getCompetencies(studentId: string) {
+      const comps = await studentCompetencyRepo.findByStudent(studentId);
+      return comps.map((c: any) => ({
+        competencyId: c.competencyId, proficiency: c.proficiency, confidence: c.confidence,
+        evidenceCount: c.evidenceCount, lastAssessedAt: c.lastAssessedAt,
+      }));
+    },
+    async getRoleRequirements() { return null; },
+    getShareTarget(_input: any, _roleId?: string) { return {}; },
+  }, async (roleId?: string) => {
+    if (!roleId) return null;
+    const bp = roleBlueprintRepo ? await roleBlueprintRepo.findEntityById(roleId) : null;
+    if (!bp) return null;
+    return bp.requirements.map((r: any) => ({
+      competencyId: r.competencyId, competencyName: r.competencyName,
+      targetLevel: r.targetLevel, importance: r.importance === 'required' ? 'must_have' : 'nice_to_have',
+    }));
+  });
+  const missionServiceWithEvidence = {
+    getMissionsForStudent: (studentId: string) => missionService.getMissionsForStudent(studentId),
+    generateMissions: (studentId: string, gaps: any, orgId: string) => missionService.generateMissions(studentId, gaps || [], orgId || ''),
+    advanceMission: async (studentId: string, competencyId: string) => {
+      const result = await missionService.advanceMission(studentId, competencyId);
+      if (result.success && result.value.status === 'completed') {
+        try {
+          const mission = result.value as any;
+          const evidence = new Evidence({
+            id: EntityId.create(), ownerId: studentId, competencyId: mission.competencyId, type: 'project' as any,
+            title: `Skill Mission completed — ${mission.competencyName}`, description: mission.description || mission.title,
+            proficiencyLevel: mission.targetLevel, confidence: 0.85, verificationStatus: 'verified' as any,
+            metadata: { missionId: mission.id.toString(), source: 'skill_mission' }, provenance: { source: 'skill_mission', sourceId: mission.id.toString(), importedAt: new Date() },
+            orgId: mission.orgId, createdAt: new Date(), updatedAt: new Date(),
+          });
+          await evidenceRepo.save(evidence);
+          try { await notificationService.pushForUser(studentId, { title: `Mission complete — ${mission.competencyName}`, body: `You completed a Skill Mission and gained verified evidence for ${mission.competencyName}.`, type: 'skill_unlock', link: '/earn' }); } catch {}
+        } catch (e) { console.warn('[mission evidence] failed', e); }
+      }
+      return result;
+    },
+  };
 
   const authService = new AuthService(userRepo, sessionRepo);
   const evidenceService = new EvidenceService(evidenceRepo);
@@ -163,6 +233,51 @@ async function main() {
     getDemandSignals: (region?: string) => analyticsService.getDemandSignals(region),
     getDemandRadar: (region?: string) => analyticsService.getDemandRadar(region),
     getGapObservatory: (institutionId?: string, region?: string) => analyticsService.getGapObservatory(institutionId, region),
+    getDemandSpikeAlerts: async (institutionId?: string) => {
+      const demand = (await demandRepo.findTopDemand(50)) as any[];
+      const alerts = demand
+        .filter((d) => d.growthRate >= 15)
+        .map((d) => ({
+          type: 'demand_spike',
+          competencyId: d.competencyId,
+          competencyName: d.competencyName,
+          growthRate: d.growthRate,
+          totalOpportunities: d.totalOpportunities,
+          message: `${d.competencyName} demand increased ${d.growthRate}% in the last 30 days.`,
+          basedOn: 'platform data',
+        }));
+      return { items: alerts, total: alerts.length };
+    },
+    projectIntervention: async (input: any) => {
+      const competencyId = input.competencyId;
+      const studentCount = Number(input.studentCount) || 0;
+      const targetLevel = Number(input.targetLevel) || 70;
+      const demandDocs = (await demandRepo.findTopDemand(50)) as any[];
+      const dem = demandDocs.find((d) => d.competencyId === competencyId);
+      // Real baseline: current avg level across institution students with this competency
+      const currentDocs = (await (studentCompetencyRepo as any).collection.find({ competencyId }).toArray()) as any[];
+      const currentLevel = currentDocs.length ? currentDocs.reduce((s: number, c: any) => s + (c.proficiency || 0), 0) / currentDocs.length : 30;
+      const g = Math.max(0, Math.min(100, targetLevel - currentLevel));
+      const expectedImprovement = Math.min(g, g * 0.6);
+      const projectedLevel = Math.min(100, currentLevel + expectedImprovement);
+      const newlyEligible = studentCount > 0 && g > 0 ? Math.round(studentCount * (expectedImprovement / 100) * (dem ? Math.min(1, dem.growthRate / 100) : 0.5)) : 0;
+      // Historical effectiveness from real intervention_outcomes
+      const outcomes = (await outcomeRepo.findByInstitution(input.institutionId || '')) as any[];
+      const histImprovement = outcomes.length ? outcomes.reduce((s: number, o: any) => s + (o.averageImprovement || 0), 0) / outcomes.length : null;
+      return {
+        competencyId,
+        competencyName: dem?.competencyName || competencyId,
+        studentCount,
+        currentLevel: Math.round(currentLevel),
+        targetLevel,
+        projectedLevel: Math.round(projectedLevel),
+        expectedGapReduction: Math.round(expectedImprovement),
+        newlyEligible,
+        historicalAverageImprovement: histImprovement != null ? Math.round(histImprovement) : null,
+        basedOn: 'platform data',
+        disclaimer: 'PROJECTED — estimates based on current platform data and historical intervention outcomes; not guaranteed.',
+      };
+    },
   };
 
   const roleBlueprintServiceProxy = {
@@ -330,7 +445,11 @@ async function main() {
     freelanceService,
     notificationService,
     skillGraphService,
-    missionService,
+    missionService: missionServiceWithEvidence,
+    challengeService,
+    microInternshipService,
+    skillRequestService,
+    skillTwinService,
   } as any);
 
   app.listen(env.port, '0.0.0.0', () => {

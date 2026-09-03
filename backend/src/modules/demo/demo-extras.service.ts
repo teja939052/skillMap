@@ -6,6 +6,13 @@ import { SkillGraphNode } from '../skillgraph/domain/skill-graph.js';
 import { SkillGraphRepository } from '../skillgraph/infrastructure/repositories.js';
 import { SkillMission } from '../missions/domain/mission.js';
 import { SkillMissionRepository } from '../missions/infrastructure/repositories.js';
+import { IndustryChallenge } from '../challenges/domain/challenge.js';
+import { ChallengeRepository } from '../challenges/infrastructure/repositories.js';
+import { MicroInternship } from '../micro-internships/domain/micro-internship.js';
+import { MicroInternshipRepository } from '../micro-internships/infrastructure/repositories.js';
+import { IndustrySkillRequest } from '../skill-requests/domain/skill-request.js';
+import { SkillRequestRepository } from '../skill-requests/infrastructure/repositories.js';
+import { StudentCompetencyRepository } from '../competency/infrastructure/repositories.js';
 import { EntityId } from '../../shared/domain/entity.js';
 
 const ORG = 'org-demo';
@@ -117,6 +124,50 @@ export async function seedDemoExtras(competencyIds: { python: string; sql: strin
     await missionRepo.save(mission);
   }
 
-  return { freelanceTasks: count, notificationSeeded: 1, skillGraphNodes: graphNodes.length, missionsSeeded: demoGaps.length };
+  const challengeRepo = new ChallengeRepository();
+  const challengeSeed = [
+    { title: 'Build a sales forecasting model', company: 'RetailCo', skills: [{ competencyId: competencyIds.python, minLevel: 65, weight: 0.6 }, { competencyId: competencyIds.sql, minLevel: 55, weight: 0.4 }], days: 7, reward: 3000, diff: 'intermediate', deliverables: ['Jupyter notebook', 'Model + writeup', 'Short presentation'] },
+    { title: 'Dockerize an analytics pipeline', company: 'DataWorks', skills: [{ competencyId: competencyIds.docker, minLevel: 60, weight: 0.5 }, { competencyId: competencyIds.python, minLevel: 60, weight: 0.5 }], days: 5, reward: 2500, diff: 'intermediate', deliverables: ['Dockerfile', 'docker-compose', 'README'] },
+    { title: 'Design a REST API for a bookstore', company: 'TechNova', skills: [{ competencyId: competencyIds.restApi, minLevel: 60, weight: 0.7 }, { competencyId: competencyIds.python, minLevel: 55, weight: 0.3 }], days: 7, reward: 4000, diff: 'advanced', deliverables: ['OpenAPI spec', 'API code', 'Tests'] },
+  ];
+  for (const c of challengeSeed) {
+    await challengeRepo.save(new IndustryChallenge({
+      id: EntityId.create(), title: c.title, description: `Industry challenge: ${c.title}. Submit a real deliverable and get evaluated by the company.`, companyName: c.company,
+      postedBy: 'demo-industry', orgId: ORG, requiredSkills: c.skills, durationDays: c.days, reward: c.reward, currency: 'INR',
+      difficulty: c.diff as any, deliverables: c.deliverables, status: 'open', submissionsCount: 0, createdAt: new Date(), updatedAt: new Date(),
+    }));
+  }
+
+  const microInternshipRepo = new MicroInternshipRepository();
+  const internshipSeed = [
+    { title: 'SQL Data Analyst (Micro-Internship)', company: 'CloudBase', skills: [{ competencyId: competencyIds.sql, minLevel: 60, weight: 0.6 }, { competencyId: competencyIds.python, minLevel: 55, weight: 0.4 }], days: 7, stipend: 3500, positions: 2 },
+    { title: 'Backend API Intern (Micro-Internship)', company: 'StartupXYZ', skills: [{ competencyId: competencyIds.restApi, minLevel: 60, weight: 0.6 }, { competencyId: competencyIds.git, minLevel: 50, weight: 0.4 }], days: 14, stipend: 7000, positions: 2 },
+    { title: 'Cloud Pipeline Intern (Micro-Internship)', company: 'Nimbus', skills: [{ competencyId: competencyIds.docker, minLevel: 60, weight: 0.5 }, { competencyId: competencyIds.aws, minLevel: 55, weight: 0.5 }], days: 30, stipend: 12000, positions: 1 },
+  ];
+  for (const m of internshipSeed) {
+    await microInternshipRepo.save(new MicroInternship({
+      id: EntityId.create(), title: m.title, description: `Paid micro-internship (${m.days} days) with ${m.company}: ${m.title}.`, companyName: m.company,
+      postedBy: 'demo-industry', orgId: ORG, requiredSkills: m.skills, durationDays: m.days, stipend: m.stipend, currency: 'INR',
+      positions: m.positions, status: 'open', createdAt: new Date(), updatedAt: new Date(),
+    }));
+  }
+
+  const skillRequestRepo = new SkillRequestRepository();
+  const studentCompRepo = new StudentCompetencyRepository();
+  const supply = await (studentCompRepo as any).collection.countDocuments({ competencyId: competencyIds.python, proficiency: { $gte: 60 } });
+  const req = new IndustrySkillRequest({
+    id: EntityId.create(), title: 'Need 20 Python + SQL students for a 4-week data project',
+    description: 'We need students who can work with Python and SQL for a 4-week industry analytics project.',
+    companyName: 'RetailCo', postedBy: 'demo-industry', orgId: ORG,
+    requirements: [{ competencyId: competencyIds.python, minLevel: 60, requestedCount: 20 }, { competencyId: competencyIds.sql, minLevel: 55, requestedCount: 20 }],
+    projectDurationDays: 28, status: 'open', supply, shortfall: Math.max(0, 20 - supply),
+    createdAt: new Date(), updatedAt: new Date(),
+  });
+  await skillRequestRepo.save(req);
+
+  const challengeCount = await (challengeRepo as any).collection.countDocuments({ orgId: ORG });
+  const internshipCount = await (microInternshipRepo as any).collection.countDocuments({ orgId: ORG });
+
+  return { freelanceTasks: count, notificationSeeded: 1, skillGraphNodes: graphNodes.length, missionsSeeded: demoGaps.length, challenges: challengeCount, microInternships: internshipCount, skillRequests: 1 };
 }
 

@@ -19,6 +19,10 @@ import { createFreelanceRouter } from './modules/freelance/http/freelance-contro
 import { createNotificationRouter } from './modules/notifications/http/notification-controller.js';
 import { createSkillGraphRouter } from './modules/skillgraph/http/skill-graph-controller.js';
 import { createMissionRouter } from './modules/missions/http/mission-controller.js';
+import { createChallengeRouter } from './modules/challenges/http/challenge-controller.js';
+import { createMicroInternshipRouter } from './modules/micro-internships/http/micro-internship-controller.js';
+import { createSkillRequestRouter } from './modules/skill-requests/http/skill-request-controller.js';
+import { createSkillTwinRouter } from './modules/skill-twin/http/skill-twin-controller.js';
 import { AuthService } from './modules/identity/application/auth-service.js';
 
 export function createApp(deps: AppDependencies) {
@@ -52,6 +56,10 @@ export function createApp(deps: AppDependencies) {
   app.use('/api/v1/notifications', createNotificationRouter(deps.notificationService));
   app.use('/api/v1/skill-graph', createSkillGraphRouter(deps.skillGraphService));
   app.use('/api/v1/missions', createMissionRouter(deps.missionService));
+  app.use('/api/v1/challenges', createChallengeRouter(deps.challengeService));
+  app.use('/api/v1/micro-internships', createMicroInternshipRouter(deps.microInternshipService));
+  app.use('/api/v1/skill-requests', createSkillRequestRouter(deps.skillRequestService));
+  app.use('/api/v1/skill-twin', createSkillTwinRouter(deps.skillTwinService));
 
   app.use(handleError);
 
@@ -74,4 +82,8 @@ export interface AppDependencies {
   notificationService: any;
   skillGraphService: any;
   missionService: any;
+  challengeService: any;
+  microInternshipService: any;
+  skillRequestService: any;
+  skillTwinService: any;
 }

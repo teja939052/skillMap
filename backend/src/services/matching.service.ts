@@ -1,6 +1,40 @@
 import { ObjectId } from 'mongodb';
 import { getCollection } from '../config/database.js';
-import { calculateMatchScore } from '@skill-map/utils';
+
+function calculateMatchScore(
+  userCompetencies: Map<string, { level: number; confidence: number }>,
+  requirements: Array<{ competencyId: string; minLevel: number; weight: number }>
+): { score: number; gaps: string[]; strengths: string[] } {
+  if (requirements.length === 0) return { score: 100, gaps: [], strengths: [] };
+
+  let totalWeight = 0;
+  let weightedScore = 0;
+  const gaps: string[] = [];
+  const strengths: string[] = [];
+
+  for (const req of requirements) {
+    totalWeight += req.weight;
+    const userComp = userCompetencies.get(req.competencyId);
+
+    if (!userComp) {
+      gaps.push(req.competencyId);
+      continue;
+    }
+
+    const levelScore = Math.min(1, userComp.level / req.minLevel);
+    const fitScore = levelScore * userComp.confidence;
+    weightedScore += fitScore * req.weight;
+
+    if (userComp.level >= req.minLevel) {
+      strengths.push(req.competencyId);
+    } else {
+      gaps.push(req.competencyId);
+    }
+  }
+
+  const score = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
+  return { score, gaps, strengths };
+}
 
 export const MatchingService = {
   async calculateScore(userId: string, requirements: Array<{ competencyId: any; minLevel: number; weight: number }>) {

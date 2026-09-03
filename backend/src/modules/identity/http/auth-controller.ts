@@ -2,7 +2,23 @@ import { Router } from 'express';
 import { AuthService } from '../application/auth-service.js';
 import { asyncHandler, authenticate } from '../../../shared/http/middleware.js';
 import { sendSuccess, sendCreated } from '../../../shared/http/response.js';
-import { registerSchema, loginSchema, refreshTokenSchema } from '@skill-map/contracts';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(128),
+  name: z.string().min(1).max(100),
+  role: z.enum(['student', 'faculty', 'industry', 'institution_admin', 'platform_admin']).optional(),
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1),
+});
 
 export function createAuthRouter(authService: AuthService): Router {
   const router = Router();
@@ -13,7 +29,7 @@ export function createAuthRouter(authService: AuthService): Router {
       res.status(400).json({ success: false, error: 'Validation failed', details: parsed.error.issues });
       return;
     }
-    const result = await authService.register(parsed.data.email, parsed.data.password, parsed.data.name, parsed.data.role);
+    const result = await authService.register(parsed.data.email, parsed.data.password, parsed.data.name, parsed.data.role || 'student');
     if (!result.success) {
       res.status(400).json({ success: false, error: result.error.message });
       return;
